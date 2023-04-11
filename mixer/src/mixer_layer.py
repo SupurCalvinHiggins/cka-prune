@@ -13,6 +13,7 @@ class MixerLayer(keras.Model):
             num_token_hidden: int, 
             num_channel_hidden: int, 
             dropout_rate: float,
+            stochastic_depth_rate: float,
         ) -> None:
         """
         Single layer of a MLP-Mixer as described in the MLP-Mixer paper.
@@ -37,6 +38,9 @@ class MixerLayer(keras.Model):
             dropout_rate:
                 The rate at which to apply dropout to both the channel-mixing MLP and
                 the token-mixing MLP.
+            
+            stochastic_depth_rate:
+                The rate at which to drop the residual branch.
         """
         
         super().__init__()
@@ -53,11 +57,13 @@ class MixerLayer(keras.Model):
             num_tokens=num_tokens,
             num_hidden=num_token_hidden,
             dropout_rate=dropout_rate,
+            stochastic_depth_rate=stochastic_depth_rate,
         )
         self.channel_mixing_mlp = MLPChannel(
             hidden_dim=hidden_dim,
             num_hidden=num_channel_hidden,
             dropout_rate=dropout_rate,
+            stochastic_depth_rate=stochastic_depth_rate,
         )
     
     def call(self, inputs):

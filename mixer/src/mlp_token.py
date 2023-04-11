@@ -1,5 +1,6 @@
 import tensorflow as tf
 from tensorflow import keras
+from tensorflow import keras_cv
 
 
 from .mlp_base import MLPBase
@@ -11,6 +12,7 @@ class MLPToken(keras.Model):
             num_tokens: int, 
             num_hidden: int, 
             dropout_rate: float,
+            stochastic_depth_rate: float,
         ) -> None:
         """
         Token-mixing MLP as described in the MLP-Mixer paper.
@@ -27,6 +29,9 @@ class MLPToken(keras.Model):
 
             dropout_rate:
                 The rate at which to apply dropout.
+            
+            stochastic_depth_rate:
+                The rate at which to drop the residual branch.
         """
 
         super().__init__()
@@ -43,13 +48,14 @@ class MLPToken(keras.Model):
             dropout_rate=dropout_rate
         )
         self.layer_norm = keras.layers.LayerNormalization(epsilon=1e-6)
+        self.stochastic_depth = keras_cv.layers.StochasticDepth(rate=stochastic_depth_rate)
 
     def call(self, inputs):
         x = self.layer_norm(inputs)
         x = tf.linalg.matrix_transpose(x)
         x = self.mlp(x)
         x = tf.linalg.matrix_transpose(x)
-        x = x + inputs
+        x = self.stochastic_depth([x, inputs])
         return x
     
     def get_config(self):

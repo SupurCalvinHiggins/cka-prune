@@ -1,4 +1,5 @@
 from tensorflow import keras
+from tensorflow import keras_cv
 
 
 from .mlp_base import MLPBase
@@ -10,6 +11,7 @@ class MLPChannel(keras.Model):
             hidden_dim: int, 
             num_hidden: int, 
             dropout_rate: float,
+            stochastic_depth_rate: float,
         ) -> None:
         """
         Token-mixing MLP as described in the MLP-Mixer paper.
@@ -25,6 +27,9 @@ class MLPChannel(keras.Model):
 
             dropout_rate:
                 The rate at which to apply dropout.
+
+            stochastic_depth_rate:
+                The rate at which to drop the residual branch.
         """
 
         super().__init__()
@@ -41,11 +46,12 @@ class MLPChannel(keras.Model):
             dropout_rate=dropout_rate
         )
         self.layer_norm = keras.layers.LayerNormalization(epsilon=1e-6)
+        self.stochastic_depth = keras_cv.layers.StochasticDepth(rate=stochastic_depth_rate)
     
     def call(self, inputs):
         x = self.layer_norm(inputs)
         x = self.mlp(x)
-        x = x + inputs
+        x = self.stochastic_depth([x, inputs])
         return x
     
     def get_config(self):
@@ -59,7 +65,7 @@ class MLPChannel(keras.Model):
         )
         return config
 
-    def summary(self, **kwargs):
-        x = keras.layers.Input(shape=(128, 64))
-        model = keras.Model(inputs=[x], outputs=self.call(x))
-        return model.summary(**kwargs)
+    # def summary(self, **kwargs):
+    #     x = keras.layers.Input(shape=(128, 64))
+    #     model = keras.Model(inputs=[x], outputs=self.call(x))
+    #     return model.summary(**kwargs)
