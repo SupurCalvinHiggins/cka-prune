@@ -23,7 +23,7 @@ def main():
     tf.random.seed(0)
 
     model = Mixer(
-        num_classes=10,
+        num_classes=1000,
         num_blocks=8,
         patch_size=32,
         num_patches=49,
