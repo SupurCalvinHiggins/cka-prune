@@ -2,7 +2,10 @@ import copy
 
 import torch
 
-import models.configs as configs
+try:
+    import mixer.models.configs as configs
+except:
+    import models.configs as configs
 
 from os.path import join as pjoin
 
