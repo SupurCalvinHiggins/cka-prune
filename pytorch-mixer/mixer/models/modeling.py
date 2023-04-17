@@ -91,11 +91,11 @@ class MixerBlock(nn.Module):
 
 
 class MlpMixer(nn.Module):
-    def __init__(self, config, img_size=224, num_classes=1000, patch_size=16, zero_head=False):
+    def __init__(self, config, img_size=224, num_classes=1000, zero_head=False):
         super(MlpMixer, self).__init__()
         self.zero_head = zero_head
         self.num_classes = num_classes
-        patch_size = _pair(patch_size)
+        patch_size = _pair(config.patch_size)
         n_patches = (img_size // patch_size[0]) * (img_size // patch_size[1])
         config.n_patches = n_patches
 
@@ -149,6 +149,7 @@ class MlpMixer(nn.Module):
 
 CONFIGS = {
     'Mixer-B_16': configs.get_mixer_b16_config(),
+    'Mixer-B_32': configs.get_mixer_b32_config(),
     'Mixer-L_16': configs.get_mixer_l16_config(),
     'Mixer-B_16-21k': configs.get_mixer_b16_config(),
     'Mixer-L_16-21k': configs.get_mixer_l16_config()
