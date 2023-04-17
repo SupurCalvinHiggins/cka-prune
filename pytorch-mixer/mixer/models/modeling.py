@@ -148,6 +148,9 @@ class MlpMixer(nn.Module):
 
 
 CONFIGS = {
+    'Mixer-S_8': configs.get_mixer_s8_config(),
+    'Mixer-S_16': configs.get_mixer_s16_config(),
+    'Mixer-S_32': configs.get_mixer_s32_config(),
     'Mixer-B_16': configs.get_mixer_b16_config(),
     'Mixer-B_32': configs.get_mixer_b32_config(),
     'Mixer-L_16': configs.get_mixer_l16_config(),

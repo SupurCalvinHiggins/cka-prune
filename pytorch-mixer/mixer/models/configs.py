@@ -15,6 +15,42 @@
 import ml_collections
 
 
+def get_mixer_s8_config():
+    """Returns Mixer-S/8 configuration."""
+    config = ml_collections.ConfigDict()
+    config.name = 'Mixer-S_8'
+    config.patch_size = 8
+    config.hidden_dim = 512
+    config.num_blocks = 8
+    config.tokens_mlp_dim = 256
+    config.channels_mlp_dim = 2048
+    return config
+
+
+def get_mixer_s16_config():
+    """Returns Mixer-S/16 configuration."""
+    config = ml_collections.ConfigDict()
+    config.name = 'Mixer-S_16'
+    config.patch_size = 16
+    config.hidden_dim = 512
+    config.num_blocks = 8
+    config.tokens_mlp_dim = 256
+    config.channels_mlp_dim = 2048
+    return config
+
+
+def get_mixer_s32_config():
+    """Returns Mixer-S/32 configuration."""
+    config = ml_collections.ConfigDict()
+    config.name = 'Mixer-S_32'
+    config.patch_size = 32
+    config.hidden_dim = 512
+    config.num_blocks = 8
+    config.tokens_mlp_dim = 256
+    config.channels_mlp_dim = 2048
+    return config
+
+
 def get_mixer_b16_config():
     """Returns Mixer-B/16 configuration."""
     config = ml_collections.ConfigDict()
