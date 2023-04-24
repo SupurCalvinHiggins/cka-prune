@@ -3,7 +3,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 
-from CKA_Google import cka, gram_rbf, gram_linear
+from cka import cka, gram_rbf, gram_linear
 
 
 def cka_rbf(a: np.array, b: np.array, sigma: float = 1) -> float:
