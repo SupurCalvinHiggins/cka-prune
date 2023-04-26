@@ -32,10 +32,10 @@ def get_activation_hook(act, idx):
 
 
 def add_hooks(model):
-    act = [None for _ in range(2)]
+    act = {}
     handles = [
-        model.fc0.register_forward_hook(get_activation_hook(act, 0)),
-        model.fc1.register_forward_hook(get_activation_hook(act, 1)),
+        model.fc0.register_forward_hook(get_activation_hook(act, model.fc0)),
+        model.fc1.register_forward_hook(get_activation_hook(act, model.fc1)),
     ]
     return act, handles
 
