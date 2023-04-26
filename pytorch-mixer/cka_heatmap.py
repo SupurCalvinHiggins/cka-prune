@@ -25,9 +25,6 @@ def compute_heatmap(
     act_b: list[np.array], 
     cka_func=cka_rbf
 ) -> np.array:
-
-    act_a = [a.mean(axis=0) for a in act_a]
-    act_b = [b.mean(axis=0) for b in act_b]
     
     heatmap = np.zeros((len(act_a), len(act_b)))
     for i, a in enumerate(act_a):
