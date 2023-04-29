@@ -55,6 +55,8 @@ def cka_structured(model, module, name, data, p=None, n=None, verbose: bool = Fa
     assert not (p is None and n is None)
     assert not (p is not None and n is not None)
 
+    tensor = getattr(module, name)
+
     if p is not None:
         prune_num = np.round(p * tensor.shape[0]).astype(int)
     elif n is not None:
