@@ -21,7 +21,7 @@ def get_arg_parser():
     parser.add_argument('--lr', default=0.0012, type=float)
     parser.add_argument('--batch_size', default=60, type=int)
     # parser.add_argument('--weight_decay', default=0.0, type=float)
-    parser.add_argument('--dropout_rate', default=0.5, type=float)
+    parser.add_argument('--dropout_rate', type=float, required=True)
     parser.add_argument('--use_1d', default=False, type=bool)
 
     return parser
