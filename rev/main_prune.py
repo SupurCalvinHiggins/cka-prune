@@ -35,6 +35,9 @@ def get_arg_parser():
     parser.add_argument('--iters', default=10, type=int)
     parser.add_argument('--percent', default=0.2, type=float)
 
+    # Which one.
+    parser.add_argument('--seed', required=True, type=int)
+
     return parser
 
 
@@ -42,7 +45,7 @@ def main(args):
     print(args)
     print()
 
-    for seed in range(args.model_count):
+    for seed in range(args.seed, args.seed + args.model_count):
 
         # Set seed.
         print("*** PRUNING ***")
