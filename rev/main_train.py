@@ -1,13 +1,11 @@
 import os
 import torch
-import random
 import argparse
-import numpy as np
 from torch import nn
 from lenet import LeNet
-from functools import partial
 from loaders import get_loaders
 from engine_train import train_model
+from utils import *
 
 
 def get_arg_parser():
@@ -27,23 +25,6 @@ def get_arg_parser():
     parser.add_argument('--use_1d', default=False, type=bool)
 
     return parser
-
-
-def set_seed(seed):
-    torch.manual_seed(seed)
-    random.seed(seed)
-    np.random.seed(seed)
-
-
-def get_model_path(seed, dropout_rate, use_1d):
-    return (
-        f"models/"
-        f"lenet-300-100"
-        f"_seed-{seed}"
-        f"_dropout_rate-{dropout_rate}"
-        f"_use_1d-{use_1d}"
-        f".pth"
-    )
 
 
 def main(args):

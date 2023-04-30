@@ -1,20 +1,53 @@
 import torch
 
 
-def get_device(use_gpu):
-    if not use_gpu or not torch.cuda.is_available():
-        return torch.device("cpu")
-    return torch.device("cuda:0")
+DEVICE = None
 
 
-def train_model_step(model, train_loader, val_loader, optimizer, criterion, device):
+def set_device(use_gpu):
+    global DEVICE
+    DEVICE = torch.device("cuda:0" if use_gpu and torch.cuda.is_available() else "cpu")
+
+
+def evaluate_model(model, loader, criterion):
+    global DEVICE
+
+    with torch.no_grad():
+        model.eval()
+
+        # Set initial loss and accuracy.
+        loss = 0
+        acc = 0
+
+        # For each batch.
+        for batch_x, batch_y in loader:
+
+            # Compute predictions.
+            batch_x, batch_y = batch_x.to(DEVICE), batch_y.to(DEVICE)
+            y = model(batch_x)
+
+            # Update loss and accuracy.
+            loss += criterion(y, batch_y).item()
+            acc += torch.argmax(y, axis=-1).eq(batch_y).sum().item()
+
+        # Normalize loss and accuracy.
+        loss /= len(loader)
+        acc /= len(loader.dataset)
+
+        return loss, acc
+
+
+
+def train_model_step(model, train_loader, val_loader, optimizer, criterion):
+    global DEVICE
+
     with torch.enable_grad():
         model.train()
 
         # Process train set.
         train_loss = 0
         for batch_x, batch_y in train_loader:
-            batch_x, batch_y = batch_x.to(device), batch_y.to(device)
+            batch_x, batch_y = batch_x.to(DEVICE), batch_y.to(DEVICE)
             
             # Process batch.
             y = model(batch_x)
@@ -30,34 +63,25 @@ def train_model_step(model, train_loader, val_loader, optimizer, criterion, devi
 
         train_loss /= len(train_loader)
 
-        # Process val set.
-        val_loss = 0
-        val_acc = 0
-        model.eval()
-        with torch.no_grad():
-            for batch_x, batch_y in val_loader:
-                batch_x, batch_y = batch_x.to(device), batch_y.to(device)
-                y = model(batch_x)
-                val_loss += criterion(y, batch_y).item()
-                val_acc += torch.argmax(y, axis=-1).eq(batch_y).sum().item()
-            val_loss /= len(val_loader)
-            val_acc /= len(val_loader.dataset)
-
+        # Process validation set.
+        val_loss, val_acc = evaluate_model(model, val_loader, criterion)
         print(f"train_loss = {train_loss:.04f}, val_loss = {val_loss:.04f}, val_acc = {val_acc:.04f}")
 
         return train_loss, val_loss
 
 
 def train_model(model, train_loader, val_loader, optimizer, criterion, epochs, patience, use_gpu):
-    device = get_device(use_gpu)
-    model = model.to(device)
+    global DEVICE
+
+    set_device(use_gpu)
+    model = model.to(DEVICE)
 
     best_val_loss = float('inf')
     epochs_without_improvement = 0
 
     for epoch in range(epochs):
         print(f"epoch = {epoch + 1}/{epochs}")
-        _, val_loss = train_model_step(model, train_loader, val_loader, optimizer, criterion, device)
+        _, val_loss = train_model_step(model, train_loader, val_loader, optimizer, criterion)
         
         # ChatGPT
         if val_loss < best_val_loss:
