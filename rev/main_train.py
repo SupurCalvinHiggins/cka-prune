@@ -50,7 +50,7 @@ def main(args):
         model = LeNet(dropout, args.dropout_rate)
 
         # Get data loaders.
-        train_loader, val_loader, test_loader = get_loaders(args.batch_size)
+        train_loader, val_loader, _ = get_loaders(args.batch_size, args.use_gpu)
 
         # Set up optimizer.
         optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
@@ -60,7 +60,7 @@ def main(args):
         model = train_model(
             model=model,
             train_loader=train_loader,
-            val_loader=test_loader,
+            val_loader=val_loader,
             optimizer=optimizer,
             criterion=criterion,
             epochs=args.epochs,
