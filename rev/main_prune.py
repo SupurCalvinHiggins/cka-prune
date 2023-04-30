@@ -1,12 +1,14 @@
 import os
 import torch
 import argparse
+import pickle as pkl
 from torch import nn
 from lenet import LeNet
 from loaders import get_loaders
 from engine import train_model, evaluate_model
 from utils import *
 from prune import cka_structured
+from torch.nn.utils.prune import ln_structured
 
 
 def get_arg_parser():
@@ -26,11 +28,12 @@ def get_arg_parser():
     parser.add_argument('--use_1d', default=False, type=bool)
 
     # Modules to prune.
-    parser.add_argument('--modules', nargs='+', default=[])
+    parser.add_argument('--modules', nargs='+', default=['fc1'])
 
     # Pruning strategy.
-    parser.add_argument('--iterative', default=False, type=bool)
-    parser.add_argument('--type', choices=['cka', 'l1'])
+    parser.add_argument('--type', choices=['cka', 'l1'], default='cka', type=str)
+    parser.add_argument('--iters', default=10, type=int)
+    parser.add_argument('--percent', default=0.2, type=float)
 
     return parser
 
@@ -47,57 +50,60 @@ def main(args):
         set_seed(seed)
 
         # Skip models that do not exist.
-        model_path = get_model_path(seed, args.dropout_rate, args.use_1d)
-        if not os.path.exists(model_path):
+        base_model_path = get_model_path(seed, args.dropout_rate, args.use_1d)
+        if not os.path.exists(base_model_path):
             print("*** FAILED ***")
             print("model does not exist")
-            print(f"model_path = {model_path}")
+            print(f"base_model_path = {base_model_path}")
             continue
         
-        # Set up model.
+        # Set up base model.
         dropout = nn.Dropout if not args.use_1d else nn.Dropout1d
         model = LeNet(dropout, args.dropout_rate)
-        model.load_state_dict(torch.load(model_path))
+        model.load_state_dict(torch.load(base_model_path))
+        module = getattr(model, args.modules[0])
 
         # Get data loaders.
-        train_loader, val_loader, test_loader = get_loaders(args.batch_size)
+        train_loader, val_loader, test_loader = get_loaders(args.batch_size, args.use_gpu)
         
-        p = 0.2
+        p = args.percent
         q = 1 - p
-        iters = 10
         output = []
         # repeat for some number of iterations
         optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
         criterion = nn.CrossEntropyLoss()
 
-        for i in range(iters):
+        for i in range(args.iters):
             print()
             print(f"i = {i}")
-            print(torch.count_nonzero(model.fc1.weight, dim=-1).eq(0).sum())
 
-            _, val_acc = evaluate_model(model, val_loader, criterion)
-            _, test_acc = evaluate_model(model, test_loader, criterion)
+            _, before_prune_val_acc = evaluate_model(model, val_loader, criterion)
+            _, before_prune_test_acc = evaluate_model(model, test_loader, criterion)
+            pruned_count = torch.count_nonzero(module.weight, dim=-1).eq(0).sum()
 
-            print()
             print("before pruning")
-            print(f"val_acc = {val_acc}, test_acc = {test_acc}")
+            print(f"val_acc = {before_prune_val_acc}, test_acc = {before_prune_test_acc}")
+            print(f"pruned_count = {pruned_count}")
 
             data = next(iter(train_loader))[0]
-            # ensure that this percentage shrinks with number of iterations
             p_i = p * (q ** i)
-            pruned_neurons, pruned_ckas = cka_structured(model, model.fc1, 'weight', data, p=p_i, verbose=True)
+            if args.type == 'cka':
+                pruned_neurons, pruned_ckas = cka_structured(model, module, 'weight', data, p=p_i, verbose=True)
+            else:
+                pruned_neurons, pruned_ckas = [], []
+                ln_structured(module, 'weight', p, n=1, dim=0)
 
-            _, val_acc = evaluate_model(model, val_loader, criterion)
-            _, test_acc = evaluate_model(model, test_loader, criterion)
+            _, after_prune_val_acc = evaluate_model(model, val_loader, criterion)
+            _, after_prune_test_acc = evaluate_model(model, test_loader, criterion)
+            pruned_count = torch.count_nonzero(module.weight, dim=-1).eq(0).sum()
 
             print()
             print("after pruning")
-            print(f"val_acc = {val_acc}, test_acc = {test_acc}")
+            print(f"val_acc = {before_prune_val_acc}, test_acc = {before_prune_test_acc}")
+            print(f"pruned_count = {pruned_count}")
             print(f"pruned_neurons = {pruned_neurons}")
             print(f"pruned_ckas = {pruned_ckas}")
-            print(torch.count_nonzero(model.fc1.weight_mask, dim=-1).eq(0).sum())
 
-            # call train model
             model = train_model(
                 model=model,
                 train_loader=train_loader,
@@ -109,24 +115,58 @@ def main(args):
                 use_gpu=args.use_gpu,
             )
 
-            _, val_acc = evaluate_model(model, val_loader, criterion)
-            _, test_acc = evaluate_model(model, test_loader, criterion)
+            _, after_train_val_acc = evaluate_model(model, val_loader, criterion)
+            _, after_train_test_acc = evaluate_model(model, test_loader, criterion)
 
             print()
             print("after retraining")
-            print(f"val_acc = {val_acc}, test_acc = {test_acc}")
+            print(f"val_acc = {after_train_val_acc}, test_acc = {after_train_test_acc}")
 
             iter_output = {
                 "pruned_neurons": pruned_neurons,
                 "pruned_ckas": pruned_ckas,
-                "val_acc": val_acc,
-                "test_acc": test_acc,
+                "before_prune": {
+                    "val_acc": before_prune_val_acc,
+                    "test_acc": before_prune_test_acc,
+                },
+                "after_prune": {
+                    "val_acc": after_prune_val_acc,
+                    "test_acc": after_prune_test_acc,
+                },
+                "after_train": {
+                    "val_acc": after_train_val_acc,
+                    "test_acc": after_train_test_acc,
+                },
             }
-            # save evaluation
             output.append(iter_output)
-            print(output)
 
-        print()
+            checkpoint_path = (
+                f"models/"
+                f"pruned-lenet-300-100"
+                f"_seed-{seed}"
+                f"_p-{p}"
+                f"_i-{i}"
+                f"_type-{args.type}"
+                f"_module-{'-'.join(args.modules)}"
+                f".pth"
+            )
+            torch.save(model.state_dict(), checkpoint_path)
+        
+        result = {
+            "output": output,
+            "args": args, 
+        }
+        result_path = (
+            f"output/"
+            f"pruned-lenet-300-100"
+            f"_seed-{seed}"
+            f"_p-{p}"
+            f"_type-{args.type}"
+            f"_module-{'-'.join(args.modules)}"
+            f".pkl"
+        )
+        with open(result_path, 'wb') as f:
+            pkl.dump(result, f)
 
 
 if __name__ == "__main__":

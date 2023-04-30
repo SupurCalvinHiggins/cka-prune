@@ -37,7 +37,6 @@ def evaluate_model(model, loader, criterion):
         return loss, acc
 
 
-
 def train_model_step(model, train_loader, val_loader, optimizer, criterion):
     global DEVICE
 
