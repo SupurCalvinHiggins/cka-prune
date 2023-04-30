@@ -43,6 +43,7 @@ def train_model_step(model, train_loader, val_loader, optimizer, criterion):
 
     with torch.enable_grad():
         model.train()
+        optimizer.zero_grad()
 
         # Process train set.
         train_loss = 0

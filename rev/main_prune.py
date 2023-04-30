@@ -67,16 +67,37 @@ def main(args):
         iters = 10
         output = []
         # repeat for some number of iterations
+        optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
+        criterion = nn.CrossEntropyLoss()
+
         for i in range(iters):
-            
+            print()
+            print(f"i = {i}")
+            print(torch.count_nonzero(model.fc1.weight, dim=-1).eq(0).sum())
+
+            _, val_acc = evaluate_model(model, val_loader, criterion)
+            _, test_acc = evaluate_model(model, test_loader, criterion)
+
+            print()
+            print("before pruning")
+            print(f"val_acc = {val_acc}, test_acc = {test_acc}")
+
             data = next(iter(train_loader))[0]
             # ensure that this percentage shrinks with number of iterations
             p_i = p * (q ** i)
-            pruned_neurons, pruned_ckas = cka_structured(model, model.fc0, 'weight', data, p=p_i, verbose=True)
+            pruned_neurons, pruned_ckas = cka_structured(model, model.fc1, 'weight', data, p=p_i, verbose=True)
+
+            _, val_acc = evaluate_model(model, val_loader, criterion)
+            _, test_acc = evaluate_model(model, test_loader, criterion)
+
+            print()
+            print("after pruning")
+            print(f"val_acc = {val_acc}, test_acc = {test_acc}")
+            print(f"pruned_neurons = {pruned_neurons}")
+            print(f"pruned_ckas = {pruned_ckas}")
+            print(torch.count_nonzero(model.fc1.weight_mask, dim=-1).eq(0).sum())
 
             # call train model
-            optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
-            criterion = nn.CrossEntropyLoss()
             model = train_model(
                 model=model,
                 train_loader=train_loader,
@@ -90,6 +111,10 @@ def main(args):
 
             _, val_acc = evaluate_model(model, val_loader, criterion)
             _, test_acc = evaluate_model(model, test_loader, criterion)
+
+            print()
+            print("after retraining")
+            print(f"val_acc = {val_acc}, test_acc = {test_acc}")
 
             iter_output = {
                 "pruned_neurons": pruned_neurons,

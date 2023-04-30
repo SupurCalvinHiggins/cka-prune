@@ -3,6 +3,7 @@ import torch
 from lenet import get_activations
 import numpy as np
 from lib.cka import cka, gram_rbf, gram_linear
+from torch.nn.utils import prune
 
 
 def cka_rbf(a: np.array, b: np.array, sigma: float = 1) -> float:
@@ -51,32 +52,50 @@ def get_cka_scores(module, name, output_act):
     return cka_scores
 
 
+class SingleNeuronPruningMethod(prune.BasePruningMethod):
+
+    PRUNING_TYPE = "structured"
+
+    def __init__(self, neuron, dim=-1):
+        super().__init__()
+        self.neuron = neuron
+        self.dim = dim
+
+    def compute_mask(self, _, default_mask):
+        mask = default_mask.clone()
+        mask[self.neuron] = 0
+        return mask
+
+
 def cka_structured(model, module, name, data, p=None, n=None, verbose: bool = False):
     assert not (p is None and n is None)
     assert not (p is not None and n is not None)
 
-    tensor = getattr(module, name)
+    with torch.no_grad():
+        model.eval()
 
-    if p is not None:
-        prune_num = np.round(p * tensor.shape[0]).astype(int)
-    elif n is not None:
-        prune_num = n
+        tensor = getattr(module, name)
 
-    if verbose:
-        pruned_neurons = []
-        pruned_ckas = []
-
-    tensor = getattr(module, name)
-    act = get_activations(model, data)
-
-    for _ in range(prune_num):
-        cka_scores = get_cka_scores(module, name, act[module])
-        neuron = cka_scores.argmax()
-        tensor[neuron] = 0
+        if p is not None:
+            prune_num = np.round(p * tensor.shape[0]).astype(int)
+        elif n is not None:
+            prune_num = n
 
         if verbose:
-            pruned_neurons.append(neuron)
-            pruned_ckas.append(cka_scores.max())
-    
-    if verbose:
-        return pruned_neurons, pruned_ckas
+            pruned_neurons = []
+            pruned_ckas = []
+
+        tensor = getattr(module, name)
+        act = get_activations(model, data)
+
+        for _ in range(prune_num):
+            cka_scores = get_cka_scores(module, name, act[module])
+            neuron = cka_scores.argmax()
+            SingleNeuronPruningMethod.apply(module, 'weight', neuron=neuron)
+
+            if verbose:
+                pruned_neurons.append(neuron)
+                pruned_ckas.append(cka_scores.max())
+        
+        if verbose:
+            return pruned_neurons, pruned_ckas

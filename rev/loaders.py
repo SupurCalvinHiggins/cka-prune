@@ -28,8 +28,8 @@ def build_datasets(transform):
 
 
 def split_dataset(dataset, split):
-    left_dataset_size = int(len(dataset) * split)
-    right_dataset_size = len(dataset) - left_dataset_size
+    right_dataset_size = int(len(dataset) * split)
+    left_dataset_size = len(dataset) - right_dataset_size
     generator = torch.Generator().manual_seed(42)
     return random_split(dataset, [left_dataset_size, right_dataset_size], generator)
 
