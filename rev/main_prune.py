@@ -28,11 +28,11 @@ def get_arg_parser():
     parser.add_argument('--use_1d', default=False, type=bool)
 
     # Modules to prune.
-    parser.add_argument('--modules', nargs='+', default=['fc1'])
+    parser.add_argument('--modules', nargs='+', default=['fc0', 'fc1'])
 
     # Pruning strategy.
     parser.add_argument('--type', choices=['cka', 'l1'], default='cka', type=str)
-    parser.add_argument('--iters', default=10, type=int)
+    parser.add_argument('--iters', default=15, type=int)
     parser.add_argument('--percent', default=0.2, type=float)
 
     # Which one.
@@ -64,7 +64,8 @@ def main(args):
         dropout = nn.Dropout if not args.use_1d else nn.Dropout1d
         model = LeNet(dropout, args.dropout_rate)
         model.load_state_dict(torch.load(base_model_path))
-        module = getattr(model, args.modules[0])
+
+        modules = [getattr(model, module_name) for module_name in args.modules]
 
         # Get data loaders.
         train_loader, val_loader, test_loader = get_loaders(args.batch_size, args.use_gpu)
@@ -82,30 +83,34 @@ def main(args):
 
             _, before_prune_val_acc = evaluate_model(model, val_loader, criterion)
             _, before_prune_test_acc = evaluate_model(model, test_loader, criterion)
-            pruned_count = torch.count_nonzero(module.weight, dim=-1).eq(0).sum()
 
             print("before pruning")
             print(f"val_acc = {before_prune_val_acc}, test_acc = {before_prune_test_acc}")
-            print(f"pruned_count = {pruned_count}")
+            for module in modules:
+                pruned_count = torch.count_nonzero(module.weight, dim=-1).eq(0).sum()
+                print(f"module = {module}, pruned_count = {pruned_count}")
 
             data = next(iter(train_loader))[0]
             p_i = p * (q ** i)
             if args.type == 'cka':
-                pruned_neurons, pruned_ckas = cka_structured(model, module, 'weight', data, p=p_i, verbose=True)
+                pruned_neurons_and_ckas = []
+                for module in modules:
+                    pruned_neurons_and_ckas.append(cka_structured(model, module, 'weight', data, p=p_i, verbose=True))
             else:
-                pruned_neurons, pruned_ckas = [], []
-                ln_structured(module, 'weight', p, n=1, dim=0)
+                pruned_neurons_and_ckas = []
+                for module in modules:
+                    ln_structured(module, 'weight', p, n=1, dim=0)
 
             _, after_prune_val_acc = evaluate_model(model, val_loader, criterion)
             _, after_prune_test_acc = evaluate_model(model, test_loader, criterion)
-            pruned_count = torch.count_nonzero(module.weight, dim=-1).eq(0).sum()
 
             print()
             print("after pruning")
             print(f"val_acc = {before_prune_val_acc}, test_acc = {before_prune_test_acc}")
-            print(f"pruned_count = {pruned_count}")
-            print(f"pruned_neurons = {pruned_neurons}")
-            print(f"pruned_ckas = {pruned_ckas}")
+            for module in modules:
+                pruned_count = torch.count_nonzero(module.weight, dim=-1).eq(0).sum()
+                print(f"module = {module}, pruned_count = {pruned_count}")
+            print(f"pruned_neurons_and_ckas = {pruned_neurons_and_ckas}")
 
             model = train_model(
                 model=model,
@@ -126,8 +131,7 @@ def main(args):
             print(f"val_acc = {after_train_val_acc}, test_acc = {after_train_test_acc}")
 
             iter_output = {
-                "pruned_neurons": pruned_neurons,
-                "pruned_ckas": pruned_ckas,
+                "pruned_neurons_and_ckas": pruned_neurons_and_ckas,
                 "before_prune": {
                     "val_acc": before_prune_val_acc,
                     "test_acc": before_prune_test_acc,
