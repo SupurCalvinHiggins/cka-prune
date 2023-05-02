@@ -6,7 +6,7 @@
         "dropout_rate": 0.5
     },
     "params": {
-        "lr": 0.0012,
+        "lr": 0.001,
         "batch_size": 512,
         "epochs": 50,
         "patience": 5
