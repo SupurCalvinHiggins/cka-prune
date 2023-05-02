@@ -9,7 +9,7 @@
         "lr": 0.001,
         "batch_size": 512,
         "epochs": 50,
-        "patience": 5
+        "patience": 3
     },
     "seeds": [0, 1, 2, 3, 4]
 }

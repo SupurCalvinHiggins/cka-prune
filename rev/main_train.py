@@ -25,26 +25,26 @@ def main(config):
         print(f"seed = {seed}")
         set_seed(seed)
 
-        # Set up model.
-        model = MLP(
-            input_size=config["input_size"],
-            hidden_sizes=config["hidden_sizes"],
-            output_size=config["output_size"],
-            dropout_rate=config["dropout_rate"],
-        )
-
         # Skip models that already exist.
-        model_path = get_model_path(model, seed)
+        model_path = get_model_path(config["model"], seed)
         if os.path.exists(model_path):
             print("model already exists")
             print()
             continue
+            
+        # Set up model.
+        model = MLP(
+            input_size=config["model"]["input_size"],
+            hidden_sizes=config["model"]["hidden_sizes"],
+            output_size=config["model"]["output_size"],
+            dropout_rate=config["model"]["dropout_rate"],
+        )
 
         # Get data loaders.
-        train_loader, val_loader, _ = get_loaders(config["batch_size"])
+        train_loader, val_loader, _ = get_loaders(config["params"]["batch_size"])
 
         # Set up optimizer.
-        optimizer = torch.optim.Adam(model.parameters(), lr=config["lr"])
+        optimizer = torch.optim.Adam(model.parameters(), lr=config["params"]["lr"])
         criterion = nn.CrossEntropyLoss()
 
         # Train model.
@@ -54,8 +54,8 @@ def main(config):
             val_loader=val_loader,
             optimizer=optimizer,
             criterion=criterion,
-            epochs=config["epochs"],
-            patience=config["patience"],
+            epochs=config["params"]["epochs"],
+            patience=config["params"]["patience"],
             use_gpu=True,
         )
 

@@ -15,14 +15,14 @@ def load_config(config_path):
         return json.load(f)
 
 
-def get_model_path(model, seed):
+def get_model_path(model_config, seed):
     return (
         f"models/"
         f"mlp"
-        f"_in-{model.input_size}"
-        f"_hd-{'-'.join(model.hidden_sizes)}"
-        f"_out-{model.output_size}"
-        f"_dr-{model.dropout_rate}"
+        f"_in-{model_config['input_size']}"
+        f"_hd-{'-'.join(str(size) for size in model_config['hidden_sizes'])}"
+        f"_out-{model_config['output_size']}"
+        f"_dr-{model_config['dropout_rate']}"
         f"_seed-{seed}"
         f".pth"
     )
