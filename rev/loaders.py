@@ -41,7 +41,7 @@ def build_samplers(train_dataset, val_dataset, test_dataset):
     return train_sampler, val_sampler, test_sampler
 
 
-def get_loaders(batch_size, use_gpu, val_split = (1/12)):
+def get_loaders(batch_size, val_split = (1/12)):
     transform = build_transform()
     dataset, test_dataset = build_datasets(transform)
     train_dataset, val_dataset = split_dataset(dataset, val_split)
@@ -53,19 +53,19 @@ def get_loaders(batch_size, use_gpu, val_split = (1/12)):
         train_dataset,
         sampler=train_sampler,
         batch_size=batch_size,
-        pin_memory=use_gpu,
+        pin_memory=True,
     )
     val_loader = DataLoader(
         val_dataset,
         sampler=val_sampler,
         batch_size=batch_size,
-        pin_memory=use_gpu,
+        pin_memory=True,
     )
     test_loader = DataLoader(
         test_dataset,
         sampler=test_sampler,
         batch_size=batch_size,
-        pin_memory=use_gpu,
+        pin_memory=True,
     )
 
     return train_loader, val_loader, test_loader

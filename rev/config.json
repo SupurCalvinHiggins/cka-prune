@@ -1,0 +1,15 @@
+{
+    "model": {
+        "input_size": 784,
+        "hidden_sizes": [1024, 1024],
+        "output_size": 10,
+        "dropout_rate": 0.5
+    },
+    "params": {
+        "lr": 0.0012,
+        "batch_size": 512,
+        "epochs": 50,
+        "patience": 5
+    },
+    "seeds": [0, 1, 2, 3, 4]
+}

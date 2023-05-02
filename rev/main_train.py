@@ -2,58 +2,49 @@ import os
 import torch
 import argparse
 from torch import nn
-from lenet import LeNet
 from loaders import get_loaders
 from engine import train_model
+from mlp import MLP
 from utils import *
 
 
 def get_arg_parser():
-    parser = argparse.ArgumentParser('LeNet-300-100 Training')
-
-    # Training configuration.
-    parser.add_argument('--model_count', type=int, required=True)
-    parser.add_argument('--epochs', default=50, type=int)
-    parser.add_argument('--patience', default=5, type=int)
-    parser.add_argument('--use_gpu', default=False, type=bool)
-
-    # Hyper-parameters.
-    parser.add_argument('--lr', default=0.0012, type=float)
-    parser.add_argument('--batch_size', default=60, type=int)
-    # parser.add_argument('--weight_decay', default=0.0, type=float)
-    parser.add_argument('--dropout_rate', type=float, required=True)
-    parser.add_argument('--use_1d', default=False, type=bool)
-
+    parser = argparse.ArgumentParser()
+    parser.add_argument('config_path', type=str)
     return parser
 
 
-def main(args):
-    print(args)
+def main(config):
+    print(config)
     print()
 
-    for seed in range(args.model_count):
+    for seed in config["seeds"]:
 
         # Set seed.
         print("*** Training ***")
         print(f"seed = {seed}")
         set_seed(seed)
 
+        # Set up model.
+        model = MLP(
+            input_size=config["input_size"],
+            hidden_sizes=config["hidden_sizes"],
+            output_size=config["output_size"],
+            dropout_rate=config["dropout_rate"],
+        )
+
         # Skip models that already exist.
-        model_path = get_model_path(seed, args.dropout_rate, args.use_1d)
+        model_path = get_model_path(model, seed)
         if os.path.exists(model_path):
             print("model already exists")
             print()
             continue
-        
-        # Set up model.
-        dropout = nn.Dropout if not args.use_1d else nn.Dropout1d
-        model = LeNet(dropout, args.dropout_rate)
 
         # Get data loaders.
-        train_loader, val_loader, _ = get_loaders(args.batch_size, args.use_gpu)
+        train_loader, val_loader, _ = get_loaders(config["batch_size"])
 
         # Set up optimizer.
-        optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
+        optimizer = torch.optim.Adam(model.parameters(), lr=config["lr"])
         criterion = nn.CrossEntropyLoss()
 
         # Train model.
@@ -63,9 +54,9 @@ def main(args):
             val_loader=val_loader,
             optimizer=optimizer,
             criterion=criterion,
-            epochs=args.epochs,
-            patience=args.patience,
-            use_gpu=args.use_gpu,
+            epochs=config["epochs"],
+            patience=config["patience"],
+            use_gpu=True,
         )
 
         # Save model.
@@ -76,4 +67,5 @@ def main(args):
 if __name__ == "__main__":
     args = get_arg_parser()
     args = args.parse_args()
-    main(args)
+    config = load_config(args.config_path)
+    main(config)
