@@ -6,7 +6,7 @@ from torch import nn
 from lenet import LeNet
 from loaders import get_loaders
 from engine import train_model, evaluate_model
-from utils import *
+
 from prune import cka_structured
 from torch.nn.utils.prune import ln_structured
 

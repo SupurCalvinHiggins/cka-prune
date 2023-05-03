@@ -1,13 +1,14 @@
 import json
 import torch
 import random
+import argparse
 import numpy as np
 
 
-def set_seed(seed):
-    torch.manual_seed(seed)
-    random.seed(seed)
-    np.random.seed(seed)
+def get_arg_parser():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('config_path', type=str)
+    return parser
 
 
 def load_config(config_path):
@@ -26,3 +27,9 @@ def get_model_path(model_config, seed):
         f"_seed-{seed}"
         f".pth"
     )
+
+
+def set_seed(seed):
+    torch.manual_seed(seed)
+    random.seed(seed)
+    np.random.seed(seed)

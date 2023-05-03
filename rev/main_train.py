@@ -1,17 +1,10 @@
 import os
 import torch
-import argparse
 from torch import nn
 from loaders import get_loaders
 from engine import train_model
 from mlp import MLP
 from utils import *
-
-
-def get_arg_parser():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('config_path', type=str)
-    return parser
 
 
 def main(config):
@@ -25,8 +18,11 @@ def main(config):
         print(f"seed = {seed}")
         set_seed(seed)
 
-        # Skip models that already exist.
+        # Get model path.
         model_path = get_model_path(config["model"], seed)
+        print(f"model_path = {model_path}")
+
+        # Skip models that already exist.
         if os.path.exists(model_path):
             print("model already exists")
             print()
