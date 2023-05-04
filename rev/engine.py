@@ -9,8 +9,11 @@ def set_device(use_gpu):
     DEVICE = torch.device("cuda:0" if use_gpu and torch.cuda.is_available() else "cpu")
 
 
-def evaluate_model(model, loader, criterion):
+def evaluate_model(model, loader, criterion=None):
     global DEVICE
+
+    if criterion is None:
+        criterion = torch.nn.CrossEntropyLoss()
 
     with torch.no_grad():
         model.eval()

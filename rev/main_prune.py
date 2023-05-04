@@ -66,7 +66,7 @@ def main(config_path):
 
         results.append(result)
         with open(result_path, "wb") as f:
-            pkl.dump(f, results)
+            pkl.dump(results, f)
         print()
 
 

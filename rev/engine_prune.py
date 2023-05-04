@@ -93,17 +93,22 @@ def l1_structured(module, module_act, p):
     # TODO: Same as CKA.
     prune_count = np.round(p * tensor.shape[0]).astype(int)
 
+    normed = torch.linalg.norm(module.weight, dim=-1, ord=1)
+    normed[normed == 0] = float('inf')
+    neurons = normed.argsort()[:prune_count]
+
+    pruned_module_act = np.copy(module_act)
     pruned_neurons = []
     pruned_ckas = []
-    for _ in range(prune_count):
-        cka_scores = get_cka_scores(module, module_act)
+
+    for i in range(neurons.shape[0]):
+        neuron = neurons[i].item()
+        # cka_scores = get_cka_scores(module, module_act)
         # TODO: Check that this ignores the 0 elements
-        normed = torch.linalg.norm(tensor, dim=-1, ord=1)
-        normed[normed == 0] = float('inf')
-        neuron = normed.argmin()
         SingleNeuronPruningMethod.apply(module, "weight", neuron=neuron)
         pruned_neurons.append(neuron)
-        pruned_ckas.append(cka_scores[neuron])
+        pruned_module_act[:, i] = module.bias[i]
+        pruned_ckas.append(cka_linear(module_act, pruned_module_act))
         print(f"neuron = {pruned_neurons[-1]}, cka = {pruned_ckas[-1]}")
     
     return pruned_neurons, pruned_ckas
@@ -119,10 +124,11 @@ def prune_one_shot(model, config, prune_func, train_loader, val_loader, test_loa
         result = []
         modules = [model.layers[i] for i in config["prune"]["modules"]]
         for module in modules:
+            print(f"module = {module}")
             neurons, ckas = prune_func(module, act[module], p=config["prune"]["params"]["rate"])
-            train_acc = evaluate_model(model, train_loader)
-            val_acc = evaluate_model(model, val_loader)
-            test_acc = evaluate_model(model, test_loader)
+            _, train_acc = evaluate_model(model, train_loader)
+            _, val_acc = evaluate_model(model, val_loader)
+            _, test_acc = evaluate_model(model, test_loader)
             result.append({
                 "neurons": neurons, 
                 "ckas": ckas, 
@@ -162,9 +168,9 @@ def prune_iterative(model, config, prune_func, train_loader, val_loader, test_lo
                 use_gpu=True
             ).to(torch.device("cpu")) # TODO: Clean this up.
 
-            train_acc = evaluate_model(model, train_loader)
-            val_acc = evaluate_model(model, val_loader)
-            test_acc = evaluate_model(model, test_loader)
+            _, train_acc = evaluate_model(model, train_loader)
+            _, val_acc = evaluate_model(model, val_loader)
+            _, test_acc = evaluate_model(model, test_loader)
             train_result = {
                 "train_acc": train_acc, 
                 "val_acc": val_acc,
