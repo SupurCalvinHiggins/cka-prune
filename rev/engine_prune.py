@@ -5,16 +5,13 @@ from loaders import get_loaders
 from engine import train_model, evaluate_model
 from mlp import MLP, get_activations
 from utils import *
-
+from lib.cka import cka, gram_rbf, gram_linear
+from torch.nn.utils import prune
 
 # Strategy: one-shot, iterative
 # Stopping criteria: iterations, cka
 # Type: l1, cka
 # multiple layers
-
-
-from lib.cka import cka, gram_rbf, gram_linear
-from torch.nn.utils import prune
 
 
 def cka_rbf(a: np.array, b: np.array, sigma: float = 1) -> float:
@@ -92,14 +89,14 @@ def cka_structured(module, module_act, p):
 
 def l1_structured(module, module_act, p):
     tensor = module.weight
-    # TODO: Same as cka.
+    # TODO: Same as CKA.
     prune_count = np.round(p * tensor.shape[0]).astype(int)
 
     pruned_neurons = []
     pruned_ckas = []
     for _ in range(prune_count):
         cka_scores = get_cka_scores(module, module_act)
-        # TODO: need to ignore the 0 elements
+        # TODO: Check that this ignores the 0 elements
         normed = torch.linalg.norm(tensor, dim=-1, ord=1)
         normed[normed == 0] = float('inf')
         neuron = normed.argmin()

@@ -29,6 +29,14 @@ def get_model_path(model_config, seed):
     )
 
 
+def get_result_path(id):
+    return (
+        f"output/"
+        f"id-{id}"
+        f".pkl"
+    )
+
+
 def set_seed(seed):
     torch.manual_seed(seed)
     random.seed(seed)
