@@ -46,7 +46,7 @@ def get_cka_scores(module, output_act):
     for i in range(neurons):
         if tensor[i].count_nonzero() == 0:
             continue
-
+        
         neuron_activation = np.copy(output_act[:, i])
         output_act_pruned[:, i] = bias[i]
         cka_scores[i] = cka_linear(output_act, output_act_pruned)
@@ -83,6 +83,7 @@ def cka_structured(module, module_act, p):
         SingleNeuronPruningMethod.apply(module, "weight", neuron=neuron)
         pruned_neurons.append(neuron)
         pruned_ckas.append(cka_scores.max())
+        print(f"neuron = {pruned_neurons[-1]}, cka = {pruned_ckas[-1]}")
     
     return pruned_neurons, pruned_ckas
 
@@ -103,11 +104,12 @@ def l1_structured(module, module_act, p):
         SingleNeuronPruningMethod.apply(module, "weight", neuron=neuron)
         pruned_neurons.append(neuron)
         pruned_ckas.append(cka_scores[neuron])
+        print(f"neuron = {pruned_neurons[-1]}, cka = {pruned_ckas[-1]}")
     
     return pruned_neurons, pruned_ckas
 
 
-def prune_one_shot(model, prune_config, prune_func, train_loader, val_loader, test_loader):
+def prune_one_shot(model, config, prune_func, train_loader, val_loader, test_loader):
     with torch.no_grad():
         model.eval()      
 
@@ -115,9 +117,9 @@ def prune_one_shot(model, prune_config, prune_func, train_loader, val_loader, te
         act = get_activations(model, data)
 
         result = []
-        modules = [model.layers[i] for i in prune_config["modules"]]
+        modules = [model.layers[i] for i in config["prune"]["modules"]]
         for module in modules:
-            neurons, ckas = prune_func(module, act[module], p=prune_config["prune"]["params"]["rate"])
+            neurons, ckas = prune_func(module, act[module], p=config["prune"]["params"]["rate"])
             train_acc = evaluate_model(model, train_loader)
             val_acc = evaluate_model(model, val_loader)
             test_acc = evaluate_model(model, test_loader)
@@ -137,10 +139,10 @@ def prune_iterative(model, config, prune_func, train_loader, val_loader, test_lo
         model.eval()
 
         result = []
-        for _ in range(config["prune"]["iterations"]):
+        for _ in range(config["prune"]["params"]["iterations"]):
             prune_result = prune_one_shot(
                 model=model, 
-                prune_config=config["prune"],
+                config=config,
                 prune_func=prune_func,
                 train_loader=train_loader,
                 val_loader=val_loader,

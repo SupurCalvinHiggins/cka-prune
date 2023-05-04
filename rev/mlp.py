@@ -37,7 +37,7 @@ def get_activation_hook(act, idx):
 def add_hooks(model):
     act = {}
     handles = [
-        model.register_forward_hook(get_activation_hook(act, layer))
+        layer.register_forward_hook(get_activation_hook(act, layer))
         for layer in model.layers
     ]
     return act, handles

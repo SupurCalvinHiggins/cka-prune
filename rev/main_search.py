@@ -1,3 +1,4 @@
+import os
 import torch
 import wandb
 from mlp import MLP
@@ -45,7 +46,7 @@ def main(_config=None):
         }
         main_train(config)
 
-        model_path = get_model_path(config["model"], config["seed"][0])
+        model_path = get_model_path(config["model"], config["seeds"][0])
         model = MLP(
             input_size=config["model"]["input_size"],
             hidden_sizes=config["model"]["hidden_sizes"],
@@ -57,6 +58,7 @@ def main(_config=None):
         criterion = torch.nn.CrossEntropyLoss()
         val_loss, val_acc = evaluate_model(model, val_loader, criterion)
         wandb.log({"val_loss": val_loss, "val_acc": val_acc})
+        os.remove(model_path)
 
 
 if __name__ == "__main__":
