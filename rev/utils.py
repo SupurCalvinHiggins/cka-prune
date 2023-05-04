@@ -8,6 +8,7 @@ import numpy as np
 def get_arg_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('config_path', type=str)
+    parser.add_argument('--output_name', default="", type=str)
     return parser
 
 
