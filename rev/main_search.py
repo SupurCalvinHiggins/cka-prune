@@ -23,7 +23,7 @@ sweep_config = {
         }
     }
 }
-sweep_id = wandb.sweep(sweep_config, project="sweep-784-1024-1024-10")
+sweep_id = wandb.sweep(sweep_config, project="sweep-784-512-10")
 
 
 def main(_config=None):
@@ -32,7 +32,7 @@ def main(_config=None):
         config = {
             "model": {
                 "input_size": 784,
-                "hidden_sizes": [1024, 1024],
+                "hidden_sizes": [512],
                 "output_size": 10,
                 "dropout_rate": 0.5
             },
@@ -42,7 +42,7 @@ def main(_config=None):
                 "epochs": 50,
                 "patience": 3
             },
-            "seeds": [0]
+            "seeds": [666]
         }
         main_train(config)
 
