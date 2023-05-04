@@ -8,6 +8,8 @@ from engine import evaluate_model
 
 
 wandb.login()
+
+
 sweep_config = {
     "method": "grid",
     "metric": {
@@ -20,7 +22,6 @@ sweep_config = {
         }
     }
 }
-
 sweep_id = wandb.sweep(sweep_config, project="sweep-784-1024-1024-10")
 
 
