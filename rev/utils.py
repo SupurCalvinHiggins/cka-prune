@@ -8,7 +8,6 @@ import numpy as np
 def get_arg_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('config_path', type=str)
-    parser.add_argument('--output_name', default="", type=str)
     return parser
 
 
@@ -30,10 +29,15 @@ def get_model_path(model_config, seed):
     )
 
 
-def get_result_path(id):
+def get_result_path(config):
     return (
         f"output/"
-        f"id-{id}"
+        f"_in-{config['model']['input_size']}"
+        f"_hd-{'-'.join(str(size) for size in config['model']['hidden_sizes'])}"
+        f"_out-{config['model']['output_size']}"
+        f"_dr-{config['model']['dropout_rate']}"
+        f"_strategy-{config['prune']['strategy']}"
+        f"_type-{config['prune']['params']['type']}"
         f".pkl"
     )
 

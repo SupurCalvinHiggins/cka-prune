@@ -8,10 +8,10 @@ from engine_prune import prune_one_shot, prune_iterative, cka_structured, l1_str
 from utils import *
 
 
-def main(args):
-    config = load_config(args.config_path)
+def main(config_path):
+    config = load_config(config_path)
     # TODO: Take result path as arg.
-    result_path = get_result_path(args.output_name)
+    result_path = get_result_path(config)
     print(f"config = {config}")
     print(f"result_path = {result_path}")
     print()
@@ -73,4 +73,4 @@ def main(args):
 if __name__ == "__main__":
     args = get_arg_parser()
     args = args.parse_args()
-    main(args)
+    main(args.config_path)
