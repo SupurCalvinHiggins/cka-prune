@@ -73,7 +73,9 @@ class SingleNeuronPruningMethod(prune.BasePruningMethod):
 def cka_structured(module, module_act, p):
     tensor = module.weight
     # TODO: Replace tensor shape with the number of non-zero neurons.
-    prune_count = np.round(p * tensor.shape[0]).astype(int) 
+    pruned_count = torch.count_nonzero(module.weight, dim=-1).eq(0).sum().item()
+    remaining_neurons = tensor.shape[0] - pruned_count
+    prune_count = np.round(p * remaining_neurons).astype(int) 
 
     pruned_neurons = []
     pruned_ckas = []
@@ -91,7 +93,9 @@ def cka_structured(module, module_act, p):
 def l1_structured(module, module_act, p):
     tensor = module.weight
     # TODO: Same as CKA.
-    prune_count = np.round(p * tensor.shape[0]).astype(int)
+    pruned_count = torch.count_nonzero(module.weight, dim=-1).eq(0).sum().item()
+    remaining_neurons = tensor.shape[0] - pruned_count
+    prune_count = np.round(p * remaining_neurons).astype(int) 
 
     normed = torch.linalg.norm(module.weight, dim=-1, ord=1)
     normed[normed == 0] = float('inf')
