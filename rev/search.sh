@@ -11,4 +11,4 @@ pip install --user numpy
 pip install --user seaborn
 pip install --user torchvision
 pip install --user wandb
-python -u main_search.py
+python -u main_search.py $1

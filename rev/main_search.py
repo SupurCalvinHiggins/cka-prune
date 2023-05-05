@@ -2,7 +2,7 @@ import os
 import torch
 import wandb
 from mlp import MLP
-from utils import get_model_path
+from utils import get_model_path, get_arg_parser, load_config
 from loaders import get_loaders
 from main_train import main as main_train
 from engine import evaluate_model
@@ -28,22 +28,12 @@ sweep_id = wandb.sweep(sweep_config, project="sweep-784-512-512-512-10")
 
 def main(_config=None):
     with wandb.init(config=_config):
+        global CONFIG_PATH
+        config = load_config(CONFIG_PATH)
+        config["params"]["lr"] = wandb.config.lr
+        config["seeds"] = [666]
+
         # TODO: Set lr in config to lr in wandb_config.
-        config = {
-            "model": {
-                "input_size": 784,
-                "hidden_sizes": [512, 512, 512],
-                "output_size": 10,
-                "dropout_rate": 0.5
-            },
-            "params": {
-                "lr": wandb.config.lr,
-                "batch_size": 512,
-                "epochs": 50,
-                "patience": 3
-            },
-            "seeds": [666]
-        }
         main_train(config)
 
         model_path = get_model_path(config["model"], config["seeds"][0])
@@ -62,4 +52,7 @@ def main(_config=None):
 
 
 if __name__ == "__main__":
+    args = get_arg_parser()
+    args = args.parse_args()
+    CONFIG_PATH = args.config_path
     wandb.agent(sweep_id, main)
