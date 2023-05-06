@@ -18,7 +18,7 @@
             "iterations": 10,
             "stop_cka": 0.99
         },
-        "modules": [0]
+        "modules": [0, 1]
     },
     "seeds": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 }
