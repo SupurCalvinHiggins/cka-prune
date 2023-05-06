@@ -73,12 +73,20 @@ class SingleNeuronPruningMethod(prune.BasePruningMethod):
         return mask
 
 
-def cka_structured(module, module_act, p):
+def cka_structured(module, module_act, p=None, stop_cka=None):
+    assert not (p is None and stop_cka is None)
+    assert not (p is not None and stop_cka is not None)
+
     tensor = module.weight
-    # TODO: Replace tensor shape with the number of non-zero neurons.
-    pruned_count = torch.count_nonzero(module.weight, dim=-1).eq(0).sum().item()
-    remaining_neurons = tensor.shape[0] - pruned_count
-    prune_count = np.round(p * remaining_neurons).astype(int) 
+
+    if p is not None:
+        pruned_count = torch.count_nonzero(module.weight, dim=-1).eq(0).sum().item()
+        remaining_neurons = tensor.shape[0] - pruned_count
+        prune_count = np.round(p * remaining_neurons).astype(int)
+    else:
+        pruned_count = torch.count_nonzero(module.weight, dim=-1).eq(0).sum().item()
+        remaining_neurons = tensor.shape[0] - pruned_count
+        prune_count = np.round(remaining_neurons).astype(int)
 
     pruned_neurons = []
     pruned_ckas = []
@@ -86,9 +94,12 @@ def cka_structured(module, module_act, p):
     for _ in range(prune_count):
         cka_scores = get_cka_scores(module, module_act)
         neuron = cka_scores.argmax()
+        if stop_cka is not None and cka_scores[neuron] <= stop_cka:
+            break
+
         SingleNeuronPruningMethod.apply(module, "weight", neuron=neuron)
         pruned_neurons.append(neuron)
-        pruned_ckas.append(cka_scores.max())
+        pruned_ckas.append(cka_scores[neuron])
         print(f"neuron = {pruned_neurons[-1]}, cka = {pruned_ckas[-1]}")
 
     return pruned_neurons, pruned_ckas
