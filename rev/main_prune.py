@@ -56,7 +56,7 @@ def main(config_path):
         # Get the pruning strategy.
         prune_strategies = {
             "iterative": prune_iterative,
-            "one_shot": prune_one_shot,
+            "one_shot": lambda *args, **kwargs: prune_iterative(*args, **kwargs, retrain=False),
         }
         prune_strategy = prune_strategies[config["prune"]["strategy"]]
 

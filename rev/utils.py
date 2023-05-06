@@ -38,7 +38,7 @@ def get_result_path(config):
         f"_dr-{config['model']['dropout_rate']}"
         f"_strategy-{config['prune']['strategy']}"
         f"_type-{config['prune']['params']['type']}"
-        f"_p-{config['prune']['params']['rate']}"
+        + (f"_p-{config['prune']['params']['rate']}" if 'rate' in config['prune']['params'] else f"_sc-{config['prune']['params']['stop_cka']}") +
         f".pkl"
     )
 

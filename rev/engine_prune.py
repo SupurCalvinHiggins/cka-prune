@@ -34,7 +34,10 @@ def flatten_inner(X):
 
 
 def get_cka_scores(module, output_act):
+    # TODO: REMOVE THIS.
     output_act = flatten_inner(output_act)
+    # TODO: END
+    
     output_act_pruned = np.copy(output_act)
 
     tensor = getattr(module, "weight")
@@ -79,6 +82,7 @@ def cka_structured(module, module_act, p):
 
     pruned_neurons = []
     pruned_ckas = []
+
     for _ in range(prune_count):
         cka_scores = get_cka_scores(module, module_act)
         neuron = cka_scores.argmax()
@@ -86,16 +90,24 @@ def cka_structured(module, module_act, p):
         pruned_neurons.append(neuron)
         pruned_ckas.append(cka_scores.max())
         print(f"neuron = {pruned_neurons[-1]}, cka = {pruned_ckas[-1]}")
-    
+
     return pruned_neurons, pruned_ckas
 
 
-def l1_structured(module, module_act, p):
+def l1_structured(module, module_act, p=None, stop_cka=None):
+    assert not (p is None and stop_cka is None)
+    assert not (p is not None and stop_cka is not None)
+
     tensor = module.weight
-    # TODO: Same as CKA.
-    pruned_count = torch.count_nonzero(module.weight, dim=-1).eq(0).sum().item()
-    remaining_neurons = tensor.shape[0] - pruned_count
-    prune_count = np.round(p * remaining_neurons).astype(int) 
+
+    if p is not None:
+        pruned_count = torch.count_nonzero(module.weight, dim=-1).eq(0).sum().item()
+        remaining_neurons = tensor.shape[0] - pruned_count
+        prune_count = np.round(p * remaining_neurons).astype(int)
+    else:
+        pruned_count = torch.count_nonzero(module.weight, dim=-1).eq(0).sum().item()
+        remaining_neurons = tensor.shape[0] - pruned_count
+        prune_count = np.round(remaining_neurons).astype(int)
 
     normed = torch.linalg.norm(module.weight, dim=-1, ord=1)
     normed[normed == 0] = float('inf')
@@ -109,12 +121,16 @@ def l1_structured(module, module_act, p):
         neuron = neurons[i].item()
         # cka_scores = get_cka_scores(module, module_act)
         # TODO: Check that this ignores the 0 elements
-        SingleNeuronPruningMethod.apply(module, "weight", neuron=neuron)
-        pruned_neurons.append(neuron)
         pruned_module_act[:, i] = module.bias[i]
-        pruned_ckas.append(cka_linear(module_act, pruned_module_act))
+        cka = cka_linear(module_act, pruned_module_act)
+        if stop_cka is not None and cka <= stop_cka:
+            break
+
+        SingleNeuronPruningMethod.apply(module, "weight", neuron=neuron)
+        pruned_ckas.append(cka)
+        pruned_neurons.append(neuron)
         print(f"neuron = {pruned_neurons[-1]}, cka = {pruned_ckas[-1]}")
-    
+
     return pruned_neurons, pruned_ckas
 
 
@@ -129,10 +145,15 @@ def prune_one_shot(model, config, prune_func, train_loader, val_loader, test_loa
         modules = [model.layers[i] for i in config["prune"]["modules"]]
         for module in modules:
             print(f"module = {module}")
-            neurons, ckas = prune_func(module, act[module], p=config["prune"]["params"]["rate"])
+            if "rate" in config["prune"]["params"]:
+                neurons, ckas = prune_func(module, act[module], p=config["prune"]["params"]["rate"])
+            else:
+                neurons, ckas = prune_func(module, act[module], stop_cka=config["prune"]["params"]["stop_cka"])
+
             _, train_acc = evaluate_model(model, train_loader)
             _, val_acc = evaluate_model(model, val_loader)
             _, test_acc = evaluate_model(model, test_loader)
+
             result.append({
                 "neurons": neurons, 
                 "ckas": ckas, 
