@@ -4,7 +4,7 @@ from mlp import MLP
 from torch import nn
 from loaders import get_loaders
 from engine import train_model, evaluate_model
-from engine_prune import prune_one_shot, prune_iterative, cka_structured, l1_structured
+from engine_prune import prune_one_shot, prune_iterative, cka_structured, l1_structured, prune_one_shot_hack
 from utils import *
 
 
@@ -56,7 +56,7 @@ def main(config_path):
         # Get the pruning strategy.
         prune_strategies = {
             "iterative": prune_iterative,
-            "one_shot": lambda *args, **kwargs: prune_iterative(*args, **kwargs, retrain=False),
+            "one_shot": prune_one_shot_hack,
         }
         prune_strategy = prune_strategies[config["prune"]["strategy"]]
 

@@ -145,6 +145,37 @@ def l1_structured(module, module_act, p=None, stop_cka=None):
     return pruned_neurons, pruned_ckas
 
 
+# TODO: Fix me.
+def prune_one_shot_hack(model, config, prune_func, train_loader, val_loader, test_loader):
+    with torch.no_grad():
+        model.eval()      
+
+        data = next(iter(val_loader))[0]
+        act = get_activations(model, data)
+
+        result = []
+        modules = [model.layers[i] for i in config["prune"]["modules"]]
+        for _ in range(modules[0].weight.shape[0]):
+            for module in modules:
+                print(f"module = {module}")
+                neurons, ckas = prune_func(module, act[module], p=1/module.weight.shape[0])
+
+                # _, train_acc = evaluate_model(model, train_loader)
+            _, val_acc = evaluate_model(model, val_loader)
+            _, test_acc = evaluate_model(model, test_loader)
+
+            result.append({
+                "neurons": neurons, 
+                "ckas": ckas, 
+                # "train_acc": train_acc, 
+                "val_acc": val_acc,
+                "test_acc": test_acc,
+            })
+            print(result)
+        
+        return result
+
+
 def prune_one_shot(model, config, prune_func, train_loader, val_loader, test_loader):
     with torch.no_grad():
         model.eval()      
