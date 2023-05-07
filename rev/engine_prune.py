@@ -156,21 +156,17 @@ def prune_one_shot_hack(model, config, prune_func, train_loader, val_loader, tes
         result = []
         modules = [model.layers[i] for i in config["prune"]["modules"]]
         for _ in range(modules[0].weight.shape[0]):
+            single_result = []
             for module in modules:
                 print(f"module = {module}")
-                neurons, ckas = prune_func(module, act[module], p=1/module.weight.shape[0])
+                pruned_count = torch.count_nonzero(module.weight, dim=-1).eq(0).sum().item()
+                remaining_neurons = module.weight.shape[0] - pruned_count
+                neurons, ckas = prune_func(module, act[module], p=1/remaining_neurons)
+                _, val_acc = evaluate_model(model, val_loader)
+                _, test_acc = evaluate_model(model, test_loader)
+                single_result.append({"neurons": neurons, "ckas": ckas, "val_acc": val_acc, "test_acc": test_acc,})
 
-                # _, train_acc = evaluate_model(model, train_loader)
-            _, val_acc = evaluate_model(model, val_loader)
-            _, test_acc = evaluate_model(model, test_loader)
-
-            result.append({
-                "neurons": neurons, 
-                "ckas": ckas, 
-                # "train_acc": train_acc, 
-                "val_acc": val_acc,
-                "test_acc": test_acc,
-            })
+            result.append(single_result)
             print(result)
         
         return result
