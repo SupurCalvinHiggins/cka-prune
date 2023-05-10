@@ -1,1 +1,1 @@
-# csc561-final
+# Representation Aware Pruning with Centered Kernel Alignment
