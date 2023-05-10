@@ -42,9 +42,43 @@ For convenience, the **lib/** folder contains Google's implementation of CKA. Th
 
 ## Hyperparameter Search
 
+To perform the learning rate hyperparameter search, call **main_search.py** with a configuration file defining the relevant model architecture and training configuration. For example, the following command performs the hyperparameter search for **config/ex1/cka.json** with WandB.
+```bash
+python3 main_search.py config/ex1/cka.json
+```
+
+To perform the same hyperparameter search with Seawulf, move **scripts/search.sh** into the root directory and execute the following command.
+```bash
+sbatch search.sh config/ex1/cka.json
+```
+
 ## Training
 
+To train the models, call **main_train.py** with a configuration file defining the relevant model architecture, training configuration and seeds. For example, the following command trains the models defined by **config/ex1/cka.json**.
+```bash
+python3 main_train.py config/ex1/cka.json
+```
+
+The resulting models will be saved to the **models/** folder.
+
+To train the same models with Seawulf, move **scripts/train.sh** into the root directory and execute the following command.
+```bash
+sbatch train.sh config/ex1/cka.json
+```
+
 ## Pruning
+
+To prune the models, call **main_prune.py** with a configuration file defining the relevant model architecture, training configuration, pruning configuration and seeds. For example, the following command prunes the models defined by **config/ex1/cka.json**. Note that the models must already have been trained with **main_train.py**.
+```bash
+python3 main_prune.py config/ex1/cka.json
+```
+
+The resulting output data will be saved to the **output/** folder.
+
+To prune the same models with Seawulf, move **scripts/prune.sh** into the root directory and execute the following command.
+```bash
+sbatch prune.sh config/ex1/cka.json
+```
 
 ## References
 
