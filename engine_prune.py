@@ -1,17 +1,10 @@
-import os
 import torch
 from torch import nn
-from loaders import get_loaders
-from engine import train_model, evaluate_model
-from mlp import MLP, get_activations
+from engine_train import train_model, evaluate_model
+from mlp import get_activations
 from utils import *
 from lib.cka import cka, gram_rbf, gram_linear
 from torch.nn.utils import prune
-
-# Strategy: one-shot, iterative
-# Stopping criteria: iterations, cka
-# Type: l1, cka
-# multiple layers
 
 
 def cka_rbf(a: np.array, b: np.array, sigma: float = 1) -> float:

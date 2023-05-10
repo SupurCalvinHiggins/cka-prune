@@ -1,7 +1,6 @@
 #!/bin/bash
-#SBATCH -t 10:00:00
-#SBATCH --nodes=1 --ntasks-per-node=4
-########S-B-ATCH --partition=dgx --gres=gpu:1
+#SBATCH -t 30:00:00
+#SBATCH --nodes=1 --ntasks-per-node=6
 #SBATCH --export=NONE
 
 module load Python/3.9.6-GCCcore-11.2.0

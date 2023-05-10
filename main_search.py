@@ -5,7 +5,7 @@ from mlp import MLP
 from utils import get_model_path, get_arg_parser, load_config
 from loaders import get_loaders
 from main_train import main as main_train
-from engine import evaluate_model
+from engine_train import evaluate_model
 
 
 wandb.login()

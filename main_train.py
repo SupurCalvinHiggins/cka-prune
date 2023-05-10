@@ -2,7 +2,7 @@ import os
 import torch
 from torch import nn
 from loaders import get_loaders
-from engine import train_model
+from engine_train import train_model
 from mlp import MLP
 from utils import *
 

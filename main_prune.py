@@ -1,10 +1,8 @@
 import os
 import pickle as pkl
 from mlp import MLP
-from torch import nn
 from loaders import get_loaders
-from engine import train_model, evaluate_model
-from engine_prune import prune_one_shot, prune_iterative, cka_structured, l1_structured, prune_one_shot_hack
+from engine_prune import prune_iterative, cka_structured, l1_structured, prune_one_shot_hack
 from utils import *
 
 
