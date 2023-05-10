@@ -23,7 +23,7 @@ sweep_config = {
         }
     }
 }
-sweep_id = wandb.sweep(sweep_config, project="sweep-784-512-512-512-10")
+sweep_id = wandb.sweep(sweep_config, project="cka_prune")
 
 
 def main(_config=None):
