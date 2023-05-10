@@ -4,6 +4,18 @@ Some experiments with a new structured pruning algorithm based on centered kerne
 
 ## Overview
 
+Centered kernel alignment (CKA) provides a measure of similiarity between neural network activations. CKA can be used to compute the relative "damage" caused by pruning a particular neuron via the following procedure.
+
+For each neuron in the layer
+1. Set the weights of the neuron to zero.
+2. Compute the layer activations.
+3. Compute the CKA score between the original and new activations.
+4. Restore the weights of the neuron.
+
+Initutively, high CKA scores correspond to low damage to network representations. Conversely, low CKA scores correspond to high damage to network representations. 
+
+To prune the network, neurons are greedily removed from each layer according to the relative damage scores until all layers have been pruned by $p$%. The damages scores are recomputed after removing each neuron and the original activations are recomputed at the start of each pruning pass. This takes $\Omega(n^2)$ time where $n$ is the number of neurons.
+
 This repository contains scripts for reproducing all project results. This includes the hyperparameter search, model training and pruning. 
 
 ## Installation
