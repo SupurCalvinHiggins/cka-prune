@@ -1,0 +1,16 @@
+BUGS:
+Need to train seed 0 for some of the archs and redo pruning on them
+    TRAINED: 256-256, 512-512, i think we only need to redo iterative 0.2 rate
+
+Need to redo one-shot pruning so it records val_acc as it removes each neuron. this 
+behavoir should not occur when one-shot is used in iterative
+
+For one-shot:
+different width, different depth, different dropout rates, different layer order
+
+For iterative:
+different pruning rates (higher p value). need to change current output file names
+    TRAINED, PRUNED, need to change current ouput file names
+
+
+0.9999
