@@ -16,7 +16,7 @@ For each neuron in the layer
 
 Initutively, high CKA scores correspond to low damage to network representations. Conversely, low CKA scores correspond to high damage to network representations. 
 
-To prune the network, neurons are greedily removed from each layer according to the relative damage scores until all layers have been pruned by $p$%. The damages scores are recomputed after removing each neuron and the original activations are recomputed at the start of each pruning pass. This takes $\Omega(n^2)$ time where $n$ is the number of neurons.
+To prune the network, neurons are greedily removed from each layer according to the relative damage scores until all layers have been pruned by $p$%. The damages scores are recomputed after removing each neuron and the original activations are recomputed at the start of each pruning pass. This takes $\Omega(n^2)$ time where $n$ is the number of neurons in the layer.
 
 ### Repository
 
@@ -47,3 +47,9 @@ For convenience, the **lib/** folder contains Google's implementation of CKA. Th
 ## Pruning
 
 ## References
+
+\[1\] Jonathan Frankle and Michael Carbin. The Lottery Ticket Hypothesis:
+Finding Sparse, Trainable Neural Networks. 2019. arXiv: 1803.03635 \[cs.LG\].
+
+\[2\] Simon Kornblith et al. Similarity of Neural Network Representations Re-
+visited. 2019. arXiv: 1905.00414 \[cs.LG\].
