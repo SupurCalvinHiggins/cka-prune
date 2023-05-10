@@ -38,7 +38,7 @@ Navigate to the root directory of the project and execute the following command.
 pip install -r requirements.txt
 ```
 
-Additionally, the **lib/** folder contains Google's implementation of CKA for convience. The original source can be found [here](https://github.com/google-research/google-research/tree/master/representation_similarity).
+For convenience, the **lib/** folder contains Google's implementation of CKA. The original source code can be found [here](https://github.com/google-research/google-research/tree/master/representation_similarity).
 
 ## Hyperparameter Search
 
