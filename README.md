@@ -50,5 +50,6 @@ For convenience, the **lib/** folder contains Google's implementation of CKA. Th
 
 \[1\] Jonathan Frankle and Michael Carbin. The Lottery Ticket Hypothesis:
 Finding Sparse, Trainable Neural Networks. 2019. arXiv: 1803.03635 \[cs.LG\].
+
 \[2\] Simon Kornblith et al. Similarity of Neural Network Representations Re-
 visited. 2019. arXiv: 1905.00414 \[cs.LG\].
